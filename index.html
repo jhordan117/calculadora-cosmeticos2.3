@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora de Precios - Cosméticos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Biblioteca para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        /* ESTILOS GENERALES */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        html {
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 120px;
+            overflow-x: hidden;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            border-bottom: 3px solid #666;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 5px;
+            color: white;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            font-weight: 300;
+            color: #ccc;
+        }
+        
+        /* SELECTOR DE CLIENTE */
+        .client-type {
+            display: flex;
+            background: #f5f5f5;
+            border-radius: 12px;
+            margin: 20px;
+            padding: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        .client-btn {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .client-btn.active {
+            background: white;
+            color: #000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 1px solid #ddd;
+        }
+        
+        /* TOTALES */
+        .totals {
+            margin: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 17px;
+        }
+        
+        .total-row:last-child {
+            font-size: 20px;
+            font-weight: 700;
+            color: #000;
+            padding-top: 10px;
+            border-top: 2px dashed #bbb;
+        }
+        
+        .total-label {
+            color: #666;
+        }
+        
+        .total-value {
+            font-weight: 600;
+            color: #000;
+        }
+        
+        /* CONTENEDORES DE ACORDEÓN PARA TODAS LAS CATEGORÍAS */
+        .category-accordion {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 0 20px 20px 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+        }
+        
+        .category-header {
+            background: #f5f5f5;
+            padding: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .category-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .category-arrow {
+            color: #000;
+            transition: transform 0.3s ease;
+            font-size: 16px;
+        }
+        
+        .category-arrow.rotated {
+            transform: rotate(180deg);
+        }
+        
+        .category-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .category-content.expanded {
+            max-height: 2000px;
+        }
+        
+        /* PRODUCTOS */
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            margin: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        
+        .product-card:hover {
+            border-color: #666;
+        }
+        
+        .product-header {
+            background: #fafafa;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .product-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+        }
+        
+        .product-arrow {
+            color: #666;
+            transition: transform 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .product-arrow.rotated {
+            transform: rotate(180deg);
+        }
+        
+        .product-variants {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .product-variants.expanded {
+            padding: 15px;
+            max-height: 500px;
+        }
+        
+        .variant {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .variant:last-child {
+            border-bottom: none;
+        }
+        
+        .variant-info {
+            flex: 1;
+        }
+        
+        .variant-name {
+            font-weight: 600;
+            color: #000;
+            font-size: 14px;
+        }
+        
+        .variant-price {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .distributor-price {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .person-price {
+            color: #555;
+            font-weight: 600;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .quantity-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #000;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .quantity-btn:active {
+            transform: scale(0.95);
+            background: #333;
+        }
+        
+        .quantity-display {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 16px;
+            color: #000;
+        }
+        
+        /* MODAL TICKET - SIN SCROLL */
+        .ticket-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .ticket-modal.active {
+            display: flex;
+        }
+        
+        .ticket-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .ticket-header {
+            background: linear-gradient(135deg, #000000 0%, #333333 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .ticket-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            max-height: calc(90vh - 160px);
+        }
+        
+        .ticket-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .ticket-item-details {
+            flex: 1;
+        }
+        
+        .ticket-item-name {
+            font-weight: 600;
+            color: #000;
+            font-size: 14px;
+        }
+        
+        .ticket-item-variant {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .ticket-item-price {
+            color: #000;
+            font-weight: 600;
+            text-align: right;
+            font-size: 14px;
+        }
+        
+        .ticket-item-qty {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .ticket-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+        }
+        
+        .ticket-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .ticket-footer {
+            padding: 15px;
+            background: #f5f5f5;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .ticket-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .close-ticket-btn {
+            background: #000;
+            color: white;
+        }
+        
+        .share-ticket-btn {
+            background: #007bff;
+            color: white;
+        }
+        
+        .pdf-ticket-btn {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .ticket-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        /* BOTONES */
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            border-top: 1px solid #ddd;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .clear-btn {
+            background: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .calculate-btn {
+            background: #000;
+            color: white;
+            border: 1px solid #000;
+        }
+        
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .clear-btn:active {
+            background: #e0e0e0;
+        }
+        
+        .calculate-btn:active {
+            background: #333;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                padding-bottom: 100px;
+            }
+            
+            .container {
+                border-radius: 12px;
+            }
+            
+            .client-type, .totals {
+                margin: 15px;
+            }
+            
+            .category-accordion {
+                margin: 0 15px 15px 15px;
+            }
+            
+            .category-header h3 {
+                font-size: 16px;
+            }
+            
+            .variant-name {
+                font-size: 13px;
+            }
+            
+            .variant-price {
+                font-size: 12px;
+            }
+            
+            .quantity-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+            
+            .quantity-display {
+                font-size: 14px;
+                min-width: 35px;
+            }
+            
+            .action-btn {
+                padding: 14px;
+                font-size: 15px;
+            }
+            
+            .ticket-content {
+                max-height: 85vh;
+            }
+            
+            .ticket-body {
+                max-height: calc(85vh - 160px);
+            }
+            
+            .ticket-footer {
+                flex-wrap: wrap;
+            }
+            
+            .ticket-btn {
+                font-size: 13px;
+                padding: 10px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .container {
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .action-buttons {
+                position: sticky;
+                bottom: 20px;
+                width: 100%;
+                max-width: 800px;
+                margin: 0 auto;
+                border-radius: 12px;
+                padding: 15px;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+            }
+        }
+        
+        /* ESTILOS PARA ICONOS */
+        .fas, .fab {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="logo">💼 CALCULADORA COSMÉTICOS</div>
+            <div class="subtitle">Calcula precios al instante • GitHub Pages</div>
+        </div>
+        
+        <!-- SELECTOR DE TIPO DE CLIENTE -->
+        <div class="client-type">
+            <button class="client-btn active" data-type="distribuidor">
+                <i class="fas fa-store"></i> Distribuidor
+            </button>
+            <button class="client-btn" data-type="persona">
+                <i class="fas fa-user"></i> Persona
+            </button>
+        </div>
+        
+        <!-- TOTALES -->
+        <div class="totals">
+            <div class="total-row">
+                <span class="total-label">Cantidad de productos:</span>
+                <span class="total-value" id="total-items">0</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Subtotal:</span>
+                <span class="total-value" id="subtotal">$0.00</span>
+            </div>
+            <div class="total-row">
+                <span class="total-label">Total:</span>
+                <span class="total-value" id="total">$0.00</span>
+            </div>
+        </div>
+        
+        <!-- LISTA DE PRODUCTOS (TODAS LAS CATEGORÍAS COMO ACORDEONES) -->
+        <div class="products-section" id="products-container">
+            <!-- Los productos se cargarán aquí con JavaScript -->
+        </div>
+    </div>
+    
+    <!-- MODAL TICKET -->
+    <div class="ticket-modal" id="ticketModal">
+        <div class="ticket-content">
+            <div class="ticket-header">
+                <h2>📋 Ticket de Compra</h2>
+                <p id="ticket-date"></p>
+            </div>
+            <div class="ticket-body" id="ticketBody">
+                <!-- Los items del ticket se generarán aquí -->
+            </div>
+            <div class="ticket-footer">
+                <button class="ticket-btn close-ticket-btn" onclick="closeTicket()">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+                <button class="ticket-btn share-ticket-btn" onclick="shareTicket()">
+                    <i class="fas fa-share-alt"></i> Compartir
+                </button>
+                <button class="ticket-btn pdf-ticket-btn" onclick="downloadPDF()">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BOTONES DE ACCIÓN -->
+    <div class="action-buttons">
+        <button class="action-btn clear-btn" onclick="clearAll()">
+            <i class="fas fa-trash-alt"></i> Limpiar
+        </button>
+        <button class="action-btn calculate-btn" onclick="showTicket()">
+            <i class="fas fa-receipt"></i> Ver Ticket
+        </button>
+    </div>
+    
+    <script>
+        // ====================
+        // BASE DE DATOS EN JS
+        // ====================
+        
+        const productosData = {
+            categorias: [
+                { id: 1, nombre: "Alisantes", codigo: "A", icono: "fas fa-spa" },
+                { id: 2, nombre: "Shampoo", codigo: "Sh", icono: "fas fa-pump-soap" },
+                { id: 3, nombre: "Restaurador", codigo: "R", icono: "fas fa-heart" },
+                { id: 4, nombre: "Keratina", codigo: "K", icono: "fas fa-star" },
+                { id: 5, nombre: "Sedas", codigo: "S", icono: "fas fa-ribbon" },
+                { id: 6, nombre: "Kit", codigo: "Kit", icono: "fas fa-box" }
+            ],
+            
+            tamanos: [
+                { id: 1, nombre: "Litro", codigo: "L" },
+                { id: 2, nombre: "Medio Litro", codigo: "M" },
+                { id: 3, nombre: "Muestra", codigo: "MU" },
+                { id: 4, nombre: "Kit", codigo: "Kit" },
+                { id: 5, nombre: "Seda", codigo: "S" },
+                { id: 6, nombre: "Único", codigo: "U" }
+            ],
+            
+            productos: [
+                // ===== ALISANTES =====
+                { id: 1, nombre: "Alaciado Japonés", categoria: 1 },
+                { id: 2, nombre: "Japonés Botox", categoria: 1 },
+                { id: 3, nombre: "Kera Brasileña", categoria: 1 },
+                { id: 4, nombre: "Alaciado Definitivo", categoria: 1 },
+                { id: 5, nombre: "Encerado Capilar", categoria: 1 },
+                { id: 6, nombre: "Efecto Espejo", categoria: 1 },
+                { id: 7, nombre: "Botox Capilar", categoria: 1 },
+                { id: 8, nombre: "Nanoplastia", categoria: 1 },
+                { id: 17, nombre: "Cierre Técnico", categoria: 1 },
+                
+                // ===== SHAMPOO =====
+                { id: 9, nombre: "Shampoo Neutro", categoria: 2 },
+                
+                // ===== RESTAURADOR =====
+                { id: 10, nombre: "Restaurador Capilar", categoria: 3 },
+                
+                // ===== KERATINA =====
+                { id: 11, nombre: "Keratina Nutritiva", categoria: 4 },
+                
+                // ===== SEDAS =====
+                { id: 12, nombre: "Seda Feromonas", categoria: 5 },
+                { id: 13, nombre: "Seda Fresa", categoria: 5 },
+                { id: 14, nombre: "Seda UVA", categoria: 5 },
+                
+                // ===== KITS =====
+                { id: 15, nombre: "Kits de 3", categoria: 6 },
+                { id: 16, nombre: "Kit de 2", categoria: 6 }
+            ],
+            
+            precios: [
+                // ===== LITROS (tamano: 1) =====
+                { producto: 1, tamano: 1, distribuidor: 880.00, persona: 1800.00 }, // CAMBIADO DE 1880 A 1800
+                { producto: 2, tamano: 1, distribuidor: 880.00, persona: 2000.00 },
+                { producto: 3, tamano: 1, distribuidor: 880.00, persona: 1800.00 },
+                { producto: 4, tamano: 1, distribuidor: 880.00, persona: 1800.00 },
+                { producto: 5, tamano: 1, distribuidor: 880.00, persona: 1600.00 },
+                { producto: 6, tamano: 1, distribuidor: 880.00, persona: 2000.00 },
+                { producto: 7, tamano: 1, distribuidor: 880.00, persona: 1800.00 },
+                { producto: 8, tamano: 1, distribuidor: 880.00, persona: 2000.00 },
+                { producto: 9, tamano: 1, distribuidor: 300.00, persona: 600.00 },
+                { producto: 17, tamano: 1, distribuidor: 900.00, persona: 1900.00 },
+                
+                // ===== MEDIOS (tamano: 2) =====
+                { producto: 1, tamano: 2, distribuidor: 490.00, persona: 1050.00 },
+                { producto: 2, tamano: 2, distribuidor: 490.00, persona: 1100.00 },
+                { producto: 3, tamano: 2, distribuidor: 490.00, persona: 1050.00 },
+                { producto: 4, tamano: 2, distribuidor: 490.00, persona: 1050.00 },
+                { producto: 5, tamano: 2, distribuidor: 490.00, persona: 1000.00 },
+                { producto: 6, tamano: 2, distribuidor: 490.00, persona: 1100.00 },
+                { producto: 7, tamano: 2, distribuidor: 490.00, persona: 1050.00 },
+                { producto: 8, tamano: 2, distribuidor: 490.00, persona: 1100.00 },
+                { producto: 9, tamano: 2, distribuidor: 150.00, persona: 350.00 },
+                { producto: 10, tamano: 2, distribuidor: 490.00, persona: 1100.00 },
+                { producto: 17, tamano: 2, distribuidor: 500.00, persona: 1150.00 },
+                
+                // ===== MUESTRAS (tamano: 3) =====
+                { producto: 1, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 2, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 3, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 4, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 5, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 6, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 7, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 8, tamano: 3, distribuidor: 327.00, persona: 800.00 },
+                { producto: 17, tamano: 3, distribuidor: 350.00, persona: 850.00 },
+                
+                // ===== KITS (tamano: 4) =====
+                { producto: 15, tamano: 4, distribuidor: 370.00, persona: 690.00 },
+                { producto: 16, tamano: 4, distribuidor: 250.00, persona: 550.00 },
+                
+                // ===== SEDAS (tamano: 5) =====
+                { producto: 12, tamano: 5, distribuidor: 155.00, persona: 290.00 },
+                { producto: 13, tamano: 5, distribuidor: 155.00, persona: 290.00 },
+                { producto: 14, tamano: 5, distribuidor: 155.00, persona: 290.00 },
+                
+                // ===== ÚNICO (tamano: 6) =====
+                { producto: 11, tamano: 6, distribuidor: 145.00, persona: 280.00 }
+            ]
+        };
+        
+        // ====================
+        // VARIABLES GLOBALES
+        // ====================
+        let clienteTipo = 'distribuidor';
+        let cantidades = {};
+        
+        // ====================
+        // FUNCIONES PRINCIPALES
+        // ====================
+        
+        // Cargar productos en la página (todas las categorías como acordeones)
+        function cargarProductos() {
+            const container = document.getElementById('products-container');
+            let html = '';
+            
+            // Agrupar productos por categoría
+            const productosPorCategoria = {};
+            
+            productosData.categorias.forEach(categoria => {
+                const productosEnCategoria = productosData.productos.filter(p => p.categoria === categoria.id);
+                if (productosEnCategoria.length > 0) {
+                    productosPorCategoria[categoria.id] = {
+                        categoria: categoria,
+                        productos: productosEnCategoria
+                    };
+                }
+            });
+            
+            // Generar HTML para cada categoría como acordeón
+            Object.values(productosPorCategoria).forEach(datos => {
+                html += `
+                    <div class="category-accordion" id="categoria-${datos.categoria.id}">
+                        <div class="category-header" onclick="toggleCategory(${datos.categoria.id})">
+                            <h3>
+                                <i class="${datos.categoria.icono}"></i> 
+                                ${datos.categoria.nombre}
+                            </h3>
+                            <div class="category-arrow" id="arrow-${datos.categoria.id}">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="category-content" id="content-${datos.categoria.id}">
+                `;
+                
+                // Para cada producto en esta categoría
+                datos.productos.forEach(producto => {
+                    const variantes = productosData.precios.filter(p => p.producto === producto.id);
+                    
+                    if (variantes.length > 0) {
+                        html += `
+                            <div class="product-card">
+                                <div class="product-header" onclick="toggleVariants(this)">
+                                    <div class="product-name">${producto.nombre}</div>
+                                    <div class="product-arrow">
+                                        <i class="fas fa-chevron-down"></i>
+                                    </div>
+                                </div>
+                                
+                                <div class="product-variants">
+                        `;
+                        
+                        // Para cada variante (tamaño) de este producto
+                        variantes.forEach(variante => {
+                            const tamano = productosData.tamanos.find(t => t.id === variante.tamano);
+                            const idUnico = `prod_${producto.id}_${tamano.codigo}`;
+                            
+                            // Inicializar cantidad en 0
+                            if (!cantidades[idUnico]) {
+                                cantidades[idUnico] = 0;
+                            }
+                            
+                            html += `
+                                <div class="variant">
+                                    <div class="variant-info">
+                                        <div class="variant-name">${tamano.nombre}</div>
+                                        <div class="variant-price">
+                                            <span class="distributor-price">D: $${variante.distribuidor.toFixed(2)}</span> | 
+                                            <span class="person-price">P: $${variante.persona.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="quantity-controls">
+                                        <button class="quantity-btn" onclick="decreaseQuantity('${idUnico}', ${variante.distribuidor}, ${variante.persona})">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <div class="quantity-display" id="qty-${idUnico}">0</div>
+                                        <button class="quantity-btn" onclick="increaseQuantity('${idUnico}', ${variante.distribuidor}, ${variante.persona})">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Abrir automáticamente la primera categoría (Alisantes)
+            setTimeout(() => toggleCategory(1), 300);
+        }
+        
+        // Alternar visibilidad de categoría
+        function toggleCategory(categoriaId) {
+            const content = document.getElementById(`content-${categoriaId}`);
+            const arrow = document.getElementById(`arrow-${categoriaId}`);
+            
+            content.classList.toggle('expanded');
+            arrow.classList.toggle('rotated');
+        }
+        
+        // Alternar visibilidad de variantes de producto
+        function toggleVariants(element) {
+            const variants = element.parentElement.querySelector('.product-variants');
+            const arrow = element.querySelector('.product-arrow');
+            
+            variants.classList.toggle('expanded');
+            arrow.classList.toggle('rotated');
+        }
+        
+        // Aumentar cantidad
+        function increaseQuantity(idUnico, precioDist, precioPers) {
+            cantidades[idUnico]++;
+            updateDisplay(idUnico);
+            updateItemCount();
+            calculateTotal();
+        }
+        
+        // Disminuir cantidad
+        function decreaseQuantity(idUnico, precioDist, precioPers) {
+            if (cantidades[idUnico] > 0) {
+                cantidades[idUnico]--;
+                updateDisplay(idUnico);
+                updateItemCount();
+                calculateTotal();
+            }
+        }
+        
+        // Actualizar display de cantidad
+        function updateDisplay(productId) {
+            const display = document.getElementById('qty-' + productId);
+            if (display) {
+                display.textContent = cantidades[productId];
+            }
+        }
+        
+        // Actualizar contador de items
+        function updateItemCount() {
+            let totalItems = 0;
+            Object.values(cantidades).forEach(qty => {
+                totalItems += qty;
+            });
+            document.getElementById('total-items').textContent = totalItems;
+        }
+        
+        // Calcular total
+        function calculateTotal() {
+            let subtotal = 0;
+            
+            for (const [productId, cantidad] of Object.entries(cantidades)) {
+                if (cantidad > 0) {
+                    const [_, prodId, tamCod] = productId.split('_');
+                    
+                    const precioInfo = productosData.precios.find(p => {
+                        const producto = productosData.productos.find(prod => prod.id === parseInt(prodId));
+                        const tamano = productosData.tamanos.find(t => t.codigo === tamCod);
+                        return p.producto === parseInt(prodId) && p.tamano === tamano.id;
+                    });
+                    
+                    if (precioInfo) {
+                        const precioUnitario = clienteTipo === 'distribuidor' ? precioInfo.distribuidor : precioInfo.persona;
+                        subtotal += cantidad * precioUnitario;
+                    }
+                }
+            }
+            
+            document.getElementById('subtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('total').textContent = '$' + subtotal.toFixed(2);
+            
+            return subtotal;
+        }
+        
+        // Mostrar ticket
+        function showTicket() {
+            const ticketBody = document.getElementById('ticketBody');
+            const modal = document.getElementById('ticketModal');
+            let html = '';
+            
+            // Fecha actual
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('ticket-date').textContent = fecha;
+            
+            let totalGeneral = 0;
+            let itemsCount = 0;
+            
+            // Generar items del ticket
+            for (const [productId, cantidad] of Object.entries(cantidades)) {
+                if (cantidad > 0) {
+                    itemsCount++;
+                    const [_, prodId, tamCod] = productId.split('_');
+                    
+                    const producto = productosData.productos.find(p => p.id === parseInt(prodId));
+                    const tamano = productosData.tamanos.find(t => t.codigo === tamCod);
+                    const precioInfo = productosData.precios.find(p => 
+                        p.producto === parseInt(prodId) && 
+                        p.tamano === tamano.id
+                    );
+                    
+                    if (precioInfo && producto) {
+                        const precioUnitario = clienteTipo === 'distribuidor' ? precioInfo.distribuidor : precioInfo.persona;
+                        const subtotalItem = cantidad * precioUnitario;
+                        totalGeneral += subtotalItem;
+                        
+                        html += `
+                            <div class="ticket-item">
+                                <div class="ticket-item-details">
+                                    <div class="ticket-item-name">${producto.nombre}</div>
+                                    <div class="ticket-item-variant">${tamano.nombre}</div>
+                                </div>
+                                <div class="ticket-item-price">
+                                    $${precioUnitario.toFixed(2)} x <span class="ticket-item-qty">${cantidad}</span><br>
+                                    <strong>$${subtotalItem.toFixed(2)}</strong>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            if (itemsCount === 0) {
+                html = '<div style="text-align: center; padding: 40px; color: #666; font-style: italic;">No hay productos seleccionados</div>';
+            } else {
+                html += `
+                    <div class="ticket-total">
+                        <span>Total:</span>
+                        <span>$${totalGeneral.toFixed(2)}</span>
+                    </div>
+                    <div class="ticket-info">
+                        <i class="fas fa-user-tag"></i> Tipo: ${clienteTipo === 'distribuidor' ? 'Distribuidor' : 'Persona'}
+                    </div>
+                `;
+            }
+            
+            ticketBody.innerHTML = html;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Cerrar ticket
+        function closeTicket() {
+            const modal = document.getElementById('ticketModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Limpiar todo
+        function clearAll() {
+            if (confirm('¿Estás seguro de que quieres limpiar toda la selección?')) {
+                Object.keys(cantidades).forEach(id => {
+                    cantidades[id] = 0;
+                    const display = document.getElementById('qty-' + id);
+                    if (display) display.textContent = '0';
+                });
+                
+                updateItemCount();
+                calculateTotal();
+            }
+        }
+        
+        // Función para compartir ticket
+        async function shareTicket() {
+            try {
+                const ticketText = generateTicketText();
+                
+                if (navigator.share) {
+                    // Web Share API (dispositivos móviles)
+                    await navigator.share({
+                        title: 'Ticket de Compra - Cosméticos',
+                        text: ticketText,
+                        url: window.location.href
+                    });
+                } else {
+                    // Fallback: copiar al portapapeles
+                    await navigator.clipboard.writeText(ticketText);
+                    alert('¡Ticket copiado al portapapeles! Puedes pegarlo en cualquier aplicación.');
+                }
+            } catch (error) {
+                console.error('Error al compartir:', error);
+                // Fallback alternativo
+                const ticketText = generateTicketText();
+                const textArea = document.createElement('textarea');
+                textArea.value = ticketText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('¡Ticket copiado al portapapeles!');
+            }
+        }
+        
+        // Función para generar texto del ticket
+        function generateTicketText() {
+            const now = new Date();
+            const fecha = now.toLocaleDateString('es-ES');
+            const hora = now.toLocaleTimeString('es-ES');
+            
+            let text = `📋 TICKET DE COMPRA - COSMÉTICOS\n`;
+            text += `Fecha: ${fecha} ${hora}\n`;
+            text += `Tipo: ${clienteTipo === 'distribuidor' ? 'Distribuidor' : 'Persona'}\n`;
+            text += `================================\n\n`;
+            
+            let totalGeneral = 0;
+            
+            for (const [productId, cantidad] of Object.entries(cantidades)) {
+                if (cantidad > 0) {
+                    const [_, prodId, tamCod] = productId.split('_');
+                    
+                    const producto = productosData.productos.find(p => p.id === parseInt(prodId));
+                    const tamano = productosData.tamanos.find(t => t.codigo === tamCod);
+                    const precioInfo = productosData.precios.find(p => 
+                        p.producto === parseInt(prodId) && 
+                        p.tamano === tamano.id
+                    );
+                    
+                    if (precioInfo && producto) {
+                        const precioUnitario = clienteTipo === 'distribuidor' ? precioInfo.distribuidor : precioInfo.persona;
+                        const subtotalItem = cantidad * precioUnitario;
+                        totalGeneral += subtotalItem;
+                        
+                        text += `${producto.nombre} (${tamano.nombre})\n`;
+                        text += `  ${cantidad} x $${precioUnitario.toFixed(2)} = $${subtotalItem.toFixed(2)}\n`;
+                    }
+                }
+            }
+            
+            text += `\n================================\n`;
+            text += `TOTAL: $${totalGeneral.toFixed(2)}\n\n`;
+            text += `¡Gracias por su compra!`;
+            
+            return text;
+        }
+        
+        // Función para descargar PDF
+        async function downloadPDF() {
+            try {
+                // Esperar a que se cargue jsPDF
+                const { jsPDF } = window.jspdf;
+                
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                // Configurar fuente
+                pdf.setFont("helvetica");
+                pdf.setFontSize(16);
+                
+                // Título
+                pdf.text("📋 TICKET DE COMPRA - COSMÉTICOS", 105, 20, { align: "center" });
+                
+                // Fecha
+                const now = new Date();
+                const fecha = now.toLocaleDateString('es-ES');
+                const hora = now.toLocaleTimeString('es-ES');
+                pdf.setFontSize(10);
+                pdf.text(`Fecha: ${fecha} ${hora}`, 20, 35);
+                pdf.text(`Tipo: ${clienteTipo === 'distribuidor' ? 'Distribuidor' : 'Persona'}`, 20, 40);
+                
+                // Línea separadora
+                pdf.setLineWidth(0.5);
+                pdf.line(20, 45, 190, 45);
+                
+                let yPosition = 55;
+                let totalGeneral = 0;
+                
+                // Encabezados de la tabla
+                pdf.setFontSize(11);
+                pdf.setFont("helvetica", "bold");
+                pdf.text("Producto", 20, yPosition);
+                pdf.text("Cant.", 120, yPosition);
+                pdf.text("Precio", 140, yPosition);
+                pdf.text("Total", 170, yPosition);
+                
+                yPosition += 10;
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(10);
+                
+                // Productos
+                for (const [productId, cantidad] of Object.entries(cantidades)) {
+                    if (cantidad > 0) {
+                        const [_, prodId, tamCod] = productId.split('_');
+                        
+                        const producto = productosData.productos.find(p => p.id === parseInt(prodId));
+                        const tamano = productosData.tamanos.find(t => t.codigo === tamCod);
+                        const precioInfo = productosData.precios.find(p => 
+                            p.producto === parseInt(prodId) && 
+                            p.tamano === tamano.id
+                        );
+                        
+                        if (precioInfo && producto) {
+                            const precioUnitario = clienteTipo === 'distribuidor' ? precioInfo.distribuidor : precioInfo.persona;
+                            const subtotalItem = cantidad * precioUnitario;
+                            totalGeneral += subtotalItem;
+                            
+                            // Si no hay espacio suficiente, agregar nueva página
+                            if (yPosition > 270) {
+                                pdf.addPage();
+                                yPosition = 20;
+                            }
+                            
+                            // Nombre del producto (puede ser multilínea)
+                            const nombreCompleto = `${producto.nombre} (${tamano.nombre})`;
+                            const nombreLines = pdf.splitTextToSize(nombreCompleto, 80);
+                            
+                            pdf.text(nombreLines, 20, yPosition);
+                            
+                            // Si el nombre tiene múltiples líneas, ajustar la posición Y
+                            const nombreHeight = nombreLines.length * 5;
+                            
+                            // Cantidad, precio y total
+                            pdf.text(`${cantidad}`, 120, yPosition);
+                            pdf.text(`$${precioUnitario.toFixed(2)}`, 140, yPosition);
+                            pdf.text(`$${subtotalItem.toFixed(2)}`, 170, yPosition);
+                            
+                            yPosition += Math.max(nombreHeight, 10);
+                        }
+                    }
+                }
+                
+                // Línea separadora final
+                yPosition += 5;
+                pdf.setLineWidth(0.5);
+                pdf.line(20, yPosition, 190, yPosition);
+                yPosition += 10;
+                
+                // Total
+                pdf.setFont("helvetica", "bold");
+                pdf.setFontSize(12);
+                pdf.text(`TOTAL: $${totalGeneral.toFixed(2)}`, 20, yPosition);
+                
+                // Pie de página
+                yPosition += 20;
+                pdf.setFont("helvetica", "normal");
+                pdf.setFontSize(9);
+                pdf.text("¡Gracias por su compra!", 105, yPosition, { align: "center" });
+                yPosition += 5;
+                pdf.text("Generado por Calculadora de Cosméticos", 105, yPosition, { align: "center" });
+                
+                // Guardar PDF
+                pdf.save(`ticket-cosmeticos-${now.getTime()}.pdf`);
+                
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                alert('Error al generar el PDF. Asegúrate de tener conexión a internet para cargar las librerías necesarias.');
+                
+                // Fallback: usar html2canvas
+                try {
+                    const ticketContent = document.querySelector('.ticket-content');
+                    const canvas = await html2canvas(ticketContent);
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    const link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = `ticket-cosmeticos-${new Date().getTime()}.png`;
+                    link.click();
+                } catch (html2canvasError) {
+                    alert('No se pudo generar el PDF/imagen. Intenta compartir el ticket en su lugar.');
+                }
+            }
+        }
+        
+        // ====================
+        // INICIALIZACIÓN
+        // ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Deshabilitar zoom
+            document.addEventListener('wheel', function(e) {
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Cargar productos
+            cargarProductos();
+            
+            // Configurar botones de tipo de cliente
+            document.querySelectorAll('.client-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.client-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    clienteTipo = this.dataset.type;
+                    calculateTotal();
+                });
+            });
+            
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('ticketModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeTicket();
+                }
+            });
+            
+            // Inicializar cálculos
+            updateItemCount();
+            calculateTotal();
+        });
+    </script>
+</body>
+</html>
